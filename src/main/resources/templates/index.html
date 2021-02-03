@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <title>食堂经理</title>
+
+  <!-- Bootstrap core CSS -->
+  <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Custom fonts for this template -->
+  <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css?family=Varela+Round" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
+  
+  <script src="js/echarts.js"></script>
+    <script src="js/jquery-3.4.1.js"></script>
+    <script src="js/xlsx.core.min.js"></script>
+
+    <script type="text/javascript">
+
+        setInterval("updateEventCount();", 1000);
+        function updateEventCount() {
+            $.get("event-count", function(fragment) { // get from controller
+                $("#eventCount").replaceWith(fragment); // update snippet of page
+            });
+        }
+    </script>
+
+  <!-- Custom styles for this template -->
+  <link href="css/grayscale.min.css" rel="stylesheet">
+
+</head>
+
+<body id="page-top">
+
+
+  <!-- Header -->
+  <header class="masthead">
+    <div class="container d-flex h-100 align-items-center">
+      <div class="mx-auto text-center">
+        <h1 class="mx-auto my-0 text-uppercase">食堂经理</h1>
+        <h2 class="text-white-50 mx-auto mt-2 mb-5">Welcome to 食堂经理 or Perfect Cook</h2>
+        <a href="#about" class="btn btn-primary js-scroll-trigger">Look Below</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- About Section -->
+  <section id="about" class="about-section text-center">
+			<h3 style="text-align: center;">SJ Food Chart</h3>
+    <br>
+    <br>
+
+   <div id="bar" style="width: 450px;height:400px;float:left;margin-right:10px;margin-left:5px"></div>
+    <div id="pie_like" style="width: 450px;height:400px;float:left;margin-right:10px"></div>
+    <div id="pie_dislike" style="width: 450px;height:400px;float:left;margin-right:10px"></div>
+
+    <script type="text/javascript">
+        // 基于准备好的dom，初始化echarts实例
+        var myChart = echarts.init(document.getElementById('bar'));
+
+        var arr1=[],arr2=[],arr3=[];
+
+        function arrTest(){
+            $.ajax({
+                type:"post",
+                async:false,
+                url:"/json_data",
+                data:{},
+                dataType:"json",
+                success:function(result){
+                    if (result) {
+                        const food_data = result;
+
+                        function compare(a, b) {
+                            const bandA = a.evaluation1 + a.evaluation2;
+                            const bandB = b.evaluation1 + b.evaluation2;
+
+                            let comparison = 0;
+                            if (bandA < bandB) {
+                                comparison = 1;
+                            } else if (bandA > bandB) {
+                                comparison = -1;
+                            }
+                            return comparison;
+                        }
+                        for (var i = 0; i < 10; i++) {
+                            arr1.push(food_data.sort(compare)[i].f_name);
+                            arr2.push(food_data.sort(compare)[i].evaluation1);
+                            arr3.push(food_data.sort(compare)[i].evaluation2);
+                        }
+                        // console.log(food_data.sort(compare));
+                    }
+                }
+            })
+
+            return arr1,arr2,arr3;
+        }
+        arrTest();
+
+        // 指定图表的配置项和数据
+        var option = {
+            title: {
+                text: 'Top 10 Data'
+            },
+            tooltip: {},
+            legend: {
+                data:['like','dislike']
+            },
+            xAxis: {data: arr1},
+            yAxis: {},
+            series: [{
+                "name": 'like',
+                "type": 'bar',
+                "data": arr2
+            },
+                {
+                    "name": 'dislike',
+                    "type": 'bar',
+                    "data": arr3
+                }
+            ]
+        };
+
+        // 使用刚指定的配置项和数据显示图表。
+        myChart.setOption(option);
+
+    </script>
+
+
+
+    <script type="text/javascript">
+        // 基于准备好的dom，初始化echarts实例
+        var myChart = echarts.init(document.getElementById('pie_like'));
+
+
+
+        var arr1=[],arr2=[];
+
+        function arrTest(){
+            $.ajax({
+                type:"post",
+                async:false,
+                url:"/json_data",
+                data:{},
+                dataType:"json",
+                success:function(result){
+                    if (result) {
+                        const food_data = result;
+
+                        function compare(a, b) {
+                            const bandA = a.evaluation1;
+                            const bandB = b.evaluation1;
+
+                            let comparison = 0;
+                            if (bandA < bandB) {
+                                comparison = 1;
+                            } else if (bandA > bandB) {
+                                comparison = -1;
+                            }
+                            return comparison;
+                        }
+                        for (var i = 0; i < 5; i++) {
+                            arr1.push(food_data.sort(compare)[i].f_name);
+                            arr2.push({
+                                name : food_data.sort(compare)[i].f_name,
+                                value : food_data.sort(compare)[i].evaluation1
+                            });
+                        }
+
+                    }
+                }
+            })
+            return arr1,arr2;
+        }
+        arrTest();
+
+
+
+        // 指定图表的配置项和数据
+        option = {
+            title : {
+                text: 'Top 5 Liked Foods',
+                x:'center'
+            },
+            tooltip : {
+                trigger: 'item',
+                formatter: "{a} <br/>{b} : {c} ({d}%)"
+            },
+            legend: {
+                orient: 'vertical',
+                left: 'left',
+                data: arr1
+            },
+            series : [
+                {
+                    name: 'like',
+                    type: 'pie',
+                    radius : '55%',
+                    center: ['50%', '60%'],
+                    data:arr2,
+                    itemStyle: {
+                        emphasis: {
+                            shadowBlur: 10,
+                            shadowOffsetX: 0,
+                            shadowColor: 'rgba(0, 0, 0, 0.5)'
+                        }
+                    }
+                }
+            ]
+        };
+
+        // 使用刚指定的配置项和数据显示图表。
+        myChart.setOption(option);
+
+    </script>
+    <script type="text/javascript">
+        // 基于准备好的dom，初始化echarts实例
+        var myChart = echarts.init(document.getElementById('pie_dislike'));
+
+
+
+        var arr1=[],arr2=[];
+
+        function arrTest(){
+            $.ajax({
+                type:"post",
+                async:false,
+                url:"/json_data",
+                data:{},
+                dataType:"json",
+                success:function(result){
+                    if (result) {
+                        const food_data = result;
+
+                        function compare(a, b) {
+                            const bandA = a.evaluation2;
+                            const bandB = b.evaluation2;
+
+                            let comparison = 0;
+                            if (bandA < bandB) {
+                                comparison = 1;
+                            } else if (bandA > bandB) {
+                                comparison = -1;
+                            }
+                            return comparison;
+                        }
+                        for (var i = 0; i < 5; i++) {
+                            arr1.push(food_data.sort(compare)[i].f_name);
+                            arr2.push({
+                                name : food_data.sort(compare)[i].f_name,
+                                value : food_data.sort(compare)[i].evaluation2
+                            });
+                        }
+                    }
+                }
+            })
+            return arr1,arr2;
+        }
+        arrTest();
+
+
+
+        // 指定图表的配置项和数据
+        option = {
+            title : {
+                text: 'Top 5 Disliked Foods',
+                x:'center'
+            },
+            tooltip : {
+                trigger: 'item',
+                formatter: "{a} <br/>{b} : {c} ({d}%)"
+            },
+            legend: {
+                orient: 'vertical',
+                left: 'left',
+                data: arr1
+            },
+            series : [
+                {
+                    name: 'dislike',
+                    type: 'pie',
+                    radius : '55%',
+                    center: ['50%', '60%'],
+                    data:arr2,
+                    itemStyle: {
+                        emphasis: {
+                            shadowBlur: 10,
+                            shadowOffsetX: 0,
+                            shadowColor: 'rgba(0, 0, 0, 0.5)'
+                        }
+                    }
+                }
+            ]
+        };
+
+        // 使用刚指定的配置项和数据显示图表。
+        myChart.setOption(option);
+
+    </script>
+    <div style="text-align: center">
+    <button type="button" class="myButton"  style="font-size: 25px;" onclick="downloadXLS()">Export Data in Excel Format</button>
+    </div>
+    <div id="ref_count">
+        <div id = "att_count">
+            <h2>Total Reviews : <span id="eventCount" th:text="${att}"></span></h2>
+        </div>
+    </div>
+    <br>
+    <div>
+        <br>
+        <a href="/clear" class="myButtonc">Clear Records</a>
+    </div>
+  </section>
+	
+
+  <!-- Footer -->
+  <footer class="bg-black small text-center text-white-50">
+    <div class="container">
+      Copyright &copy; 食堂经理 RARL JXUST 2020
+    </div>
+  </footer>
+
+  <!-- Bootstrap core JavaScript -->
+  <script src="vendor/jquery/jquery.min.js"></script>
+  <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+  <!-- Plugin JavaScript -->
+  <script src="vendor/jquery-easing/jquery.easing.min.js"></script>
+
+  <!-- Custom scripts for this template -->
+  <script src="js/grayscale.min.js"></script>
+
+</body>
+
+</html>
