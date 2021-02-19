@@ -4,20 +4,25 @@ import com.alibaba.fastjson.JSON;
 import com.rarl.sj.entity.DataEntity;
 import com.rarl.sj.entity.FoodEntity;
 import com.rarl.sj.repository.FoodRepository;
+import org.apache.poi.xssf.usermodel.XSSFCell;
+import org.apache.poi.xssf.usermodel.XSSFRow;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.servlet.error.ErrorController;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 
+import javax.servlet.http.HttpServletResponse;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -120,11 +125,64 @@ public class FoodController implements ErrorController {
         //do something like logging
         return "error";
     }
+    @RequestMapping(value = "export", params = "id", method = RequestMethod.GET)
+    public void aexport(HttpServletResponse response, @RequestParam("id") String id){
+        String headerValue="attachment; filename=DB_All_" + id + ".xlsx";
+        response.setContentType("application/vnd.ms-excel");
+        response.setHeader("Content-Disposition", headerValue);
+        List<String> headerValues= new ArrayList<>();
+
+        XSSFWorkbook workbook = new XSSFWorkbook();
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver");
+            Connection con = DriverManager.getConnection("jdbc:mysql://120.79.140.98:3306/SJ","root","991211");
+
+            Statement statement = con.createStatement();
+            XSSFSheet spreadsheet = workbook.createSheet("AllRecord");
+            ResultSet resultSet = statement.executeQuery("Select * from food");
+
+
+            XSSFRow row = spreadsheet.createRow(0);
+            XSSFCell cell;
+            int cc=resultSet.getMetaData().getColumnCount();
+            for(int i=1;i<=cc;i++)
+            {
+                String headerVal=resultSet.getMetaData().getColumnName(i);
+                headerValues.add(headerVal);
+                cell = row.createCell(i-1);
+                cell.setCellValue(resultSet.getMetaData().getColumnName(i));
+            }
+            System.out.println(headerValues);
+
+            int i = 1;
+            while (resultSet.next())
+            {
+
+                XSSFRow row1 = spreadsheet.createRow((short) i);
+                for(int p=0;p<headerValues.size();p++)
+                {
+                    row1.createCell((short) p).setCellValue(resultSet.getString(headerValues.get(p)));
+                }
+                i++;
+            }
+            workbook.write(response.getOutputStream()); // Write workbook to response.
+            workbook.close();
+            System.out.println("File written successfully");
+
+        }catch(Exception e){}
+    }
 
     @Override
     public String getErrorPath() {
         return "/error";
     }
+
+    public String findDate(){
+        LocalDate localDate = LocalDate.now();
+        String formattedDate = localDate.format(DateTimeFormatter.ofPattern("YYYY-MM-dd"));
+        return formattedDate;
+    }
+
 
 
 

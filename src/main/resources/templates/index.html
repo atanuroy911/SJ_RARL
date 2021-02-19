@@ -1,6 +1,6 @@
 <!DOCTYPE html>
-<html lang="en">
 
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
 
   <meta charset="utf-8">
@@ -305,7 +305,7 @@
 
     </script>
     <div style="text-align: center">
-    <button type="button" class="myButton"  style="font-size: 25px;" onclick="downloadXLS()">Export Data in Excel Format</button>
+        <a class="btn btn-primary btn-demo popup-vimeo" th:href="@{'/export?id='+1}">Export Data in XLS</a><br>
     </div>
     <div id="ref_count">
         <div id = "att_count">
